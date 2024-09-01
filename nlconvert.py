@@ -67,13 +67,18 @@ for part in ntlst.parts:
         if part.value.startswith("Q_PNP"):
             qtype = "PNP"
         f.write("   QBJT_EB("+part.ref+", \""+qtype+"\")\n")
+    elif part.name == "74S287":
+        f.write("   PROM_74S287_DIP("+part.ref+")\n")
+        f.write("   PARAM("+part.ref+".ROM, \""+part.value+"\")\n")
     elif part.name.startswith("74"):
-        f.write("   TTL_74")
-        ttlno = part.name[2:].replace("LS","").replace("HC","").replace("AHC","")
-        if ttlno == "12":
-            ttlno = "10"
-        if ttlno == "09":
-            ttlno = "08"
+        f.write("   TTL_")
+        ttlno = part.name.replace("LS","").replace("HC","").replace("AHC","")
+        if ttlno == "7412":
+            ttlno = "7410"
+        if ttlno == "7409":
+            ttlno = "7408"
+        if ttlno == "74259":
+            ttlno = "9334"
         f.write(ttlno)
         f.write("_DIP("+part.ref+")\n")
     elif part.name == "MB7137":
