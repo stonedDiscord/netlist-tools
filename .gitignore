@@ -1,1 +1,6 @@
 *.cpp
+*.h
+
+*.net
+
+venv/

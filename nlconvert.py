@@ -85,11 +85,13 @@ for part in ntlst.parts:
         print(part.name)
 
 for net in ntlst.nets:
-    f.write("   ALIAS(")
-    f.write(net.name.replace(" ","_").replace("~{","i").replace("}","").replace("(","").replace(")","").replace("&","AND").replace(".","_"))
-    f.write(", ")
-    f.write(net.pins[0].ref+"."+net.pins[0].num)
-    f.write(")\n")
+    netname = net.name.replace(" ","_").replace("~{","i").replace("}","").replace("(","").replace(")","").replace("&","AND").replace(".","_")
+    if not ( netname.startswith("Net-") or netname.startswith("unconnected-")):
+        f.write("   ALIAS(")
+        f.write(netname)
+        f.write(", ")
+        f.write(net.pins[0].ref+"."+net.pins[0].num)
+        f.write(")\n")
     if len(net.pins) > 1:
         f.write("   NET_C(")
         first = True
