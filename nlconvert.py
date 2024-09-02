@@ -16,6 +16,8 @@ f.write("{\n")
 
 def convertcap(oldvalue):
     oldvalue = oldvalue.upper().replace(",",".")
+    if oldvalue.endswith("V"):
+        oldvalue = oldvalue.split(" ")[0]
     if oldvalue.endswith("F"):
         oldvalue = oldvalue[:-1]
     if oldvalue.endswith("U"):
