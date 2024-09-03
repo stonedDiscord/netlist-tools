@@ -42,6 +42,8 @@ qpins = "ECB"
 
 for part in ntlst.parts:
     partname = part.name
+    if partname.startswith("SN74"):
+        partname = partname[2:].replace("AN","")
     if partname == "C" or partname == "C_US" or partname == "C_Polarized" or partname == "C_Polarized_US":
         f.write("   CAP("+part.ref+", "+convertcap(part.value)+")\n")
     elif partname == "R" or partname == "R_US":
@@ -76,8 +78,6 @@ for part in ntlst.parts:
     elif partname == "74S287":
         f.write("   PROM_74S287_DIP("+part.ref+")\n")
         f.write("   PARAM("+part.ref+".ROM, \""+part.value+"\")\n")
-    elif partname.startswith("SN74"):
-        partname = partname[2:]
     elif partname.startswith("74"):
         f.write("   TTL_")
         ttlno = partname.replace("LS","").replace("HC","").replace("AHC","")
