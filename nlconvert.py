@@ -39,6 +39,8 @@ def convertres(oldvalue):
     return oldvalue
 
 qpins = "ECB"
+dipsize = 4
+crystal3 = ["VCC","Q","GND"]
 
 for part in ntlst.parts:
     partname = part.name
@@ -51,7 +53,7 @@ for part in ntlst.parts:
     elif partname.startswith("R_Network"):
         nwtype = int(partname[9:].replace("_US","").replace("_Split",""))
         for r in range(nwtype):
-            f.write("   RES("+part.ref+"_"+str(r)+", "+convertres(part.value)+")\n")
+            f.write("   RES("+part.ref+"_"+str(r+1)+", "+convertres(part.value)+")\n")
         f.write("   NET_C(")
         first = True
         for r in range(nwtype):
@@ -64,7 +66,11 @@ for part in ntlst.parts:
     elif partname.startswith("R_Pack"):
         nwtype = int(partname[6:].replace("_Split","").replace("_US",""))
         for r in range(nwtype):
-            f.write("   RES("+part.ref+"_"+str(r)+", "+convertres(part.value)+")\n")
+            f.write("   RES("+part.ref+"_"+str(r+1)+", "+convertres(part.value)+")\n")
+    elif partname.startswith("SW_DIP"):
+        dipsize = int(partname[8:])
+        for r in range(dipsize):
+            f.write("   SWITCH2("+part.ref+"_"+str(r+1)+")\n")
     elif partname == "R_Potentiometer" or partname == "R_Potentiometer_US":
         f.write("   POT("+part.ref+", "+convertres(part.value)+")\n")
     elif partname == "D":
@@ -75,6 +81,8 @@ for part in ntlst.parts:
             qtype = "PNP"
         qpins = partname[6:]
         f.write("   QBJT_EB("+part.ref+", \""+qtype+"\")\n")
+    elif partname.startswith("Crystal"):
+        f.write("   CLOCK("+part.ref+", \""+part.value.replace(",","")+"\")\n")
     elif partname == "74S287":
         f.write("   PROM_74S287_DIP("+part.ref+")\n")
         f.write("   PARAM("+part.ref+".ROM, \""+part.value+"\")\n")
@@ -92,13 +100,15 @@ for part in ntlst.parts:
     elif partname == "MB7137":
         f.write("   EPROM_2716_DIP("+part.ref+")\n")
         f.write("   PARAM("+part.ref+".ROM, \""+part.value+"\")\n")
-    elif partname == "NE555P":
+    elif partname.startswith("NE555"):
         f.write("   NE555_DIP("+part.ref+")\n")
+    elif partname == "Am27LS00":
+        f.write("   TTL_82S16_DIP("+part.ref+")\n")
     else:
         print(partname)
 
 for net in ntlst.nets:
-    netname = net.name.replace(" ","_").replace("~{","i").replace("}","").replace("(","").replace(")","").replace("&","AND").replace(".","_")
+    netname = net.name.replace(" ","_").replace("~{","i").replace("}","").replace("(","").replace(")","").replace("&","and").replace(".","_").replace("/","b")
     if not ( netname.startswith("Net-") or netname.startswith("unconnected-")):
         f.write("   ALIAS(")
         f.write(netname)
@@ -113,11 +123,23 @@ for net in ntlst.nets:
                 first = False
             else:
                 f.write(", ")
-            f.write(pin.ref+".")
-            if pin.ref.startswith("Q"):
-                f.write(qpins[int(pin.num)-1])
+            
+            if pin.ref.startswith("SW"):
+                f.write(pin.ref+"_")
+                pinno = int(pin.num)
+                side = 1
+                if (pinno > dipsize):
+                    pinno = pinno % dipsize + 1
+                    side = 2
+                f.write(str(pinno)+"."+str(side))
             else:
-                f.write(pin.num)
+                f.write(pin.ref+".")
+                if pin.ref.startswith("Q"):
+                    f.write(qpins[int(pin.num)-1])
+                elif pin.ref.startswith("Y"):
+                    f.write(crystal3[int(pin.num)-1])
+                else:
+                    f.write(pin.num)
         f.write(")\n")
 f.write("}")
 f.close()
