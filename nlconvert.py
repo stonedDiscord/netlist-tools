@@ -38,13 +38,16 @@ def convertres(oldvalue):
         return "RES_M(" + oldvalue[:-1] + ")"
     return oldvalue
 
+qpins = "ECB"
+
 for part in ntlst.parts:
-    if part.name == "C" or part.name == "C_US" or part.name == "C_Polarized" or part.name == "C_Polarized_US":
+    partname = part.name
+    if partname == "C" or partname == "C_US" or partname == "C_Polarized" or partname == "C_Polarized_US":
         f.write("   CAP("+part.ref+", "+convertcap(part.value)+")\n")
-    elif part.name == "R" or part.name == "R_US":
+    elif partname == "R" or partname == "R_US":
         f.write("   RES("+part.ref+", "+convertres(part.value)+")\n")
-    elif part.name.startswith("R_Network"):
-        nwtype = int(part.name[9:].replace("_US","").replace("_Split",""))
+    elif partname.startswith("R_Network"):
+        nwtype = int(partname[9:].replace("_US","").replace("_Split",""))
         for r in range(nwtype):
             f.write("   RES("+part.ref+"_"+str(r)+", "+convertres(part.value)+")\n")
         f.write("   NET_C(")
@@ -56,25 +59,28 @@ for part in ntlst.parts:
                 f.write(", ")
             f.write(part.ref+"_"+str(r)+".1")
         f.write(")\n")
-    elif part.name.startswith("R_Pack"):
-        nwtype = int(part.name[6:].replace("_Split","").replace("_US",""))
+    elif partname.startswith("R_Pack"):
+        nwtype = int(partname[6:].replace("_Split","").replace("_US",""))
         for r in range(nwtype):
             f.write("   RES("+part.ref+"_"+str(r)+", "+convertres(part.value)+")\n")
-    elif part.name == "R_Potentiometer" or part.name == "R_Potentiometer_US":
+    elif partname == "R_Potentiometer" or partname == "R_Potentiometer_US":
         f.write("   POT("+part.ref+", "+convertres(part.value)+")\n")
-    elif part.name == "D":
+    elif partname == "D":
         f.write("   DIODE("+part.ref+", \""+part.value+"\")\n")
-    elif part.name == "Q_NPN_ECB":
+    elif partname.startswith("Q"):
         qtype="NPN"
         if part.value.startswith("Q_PNP"):
             qtype = "PNP"
+        qpins = partname[6:]
         f.write("   QBJT_EB("+part.ref+", \""+qtype+"\")\n")
-    elif part.name == "74S287":
+    elif partname == "74S287":
         f.write("   PROM_74S287_DIP("+part.ref+")\n")
         f.write("   PARAM("+part.ref+".ROM, \""+part.value+"\")\n")
-    elif part.name.startswith("74"):
+    elif partname.startswith("SN74"):
+        partname = partname[2:]
+    elif partname.startswith("74"):
         f.write("   TTL_")
-        ttlno = part.name.replace("LS","").replace("HC","").replace("AHC","")
+        ttlno = partname.replace("LS","").replace("HC","").replace("AHC","")
         if ttlno == "7412":
             ttlno = "7410"
         if ttlno == "7409":
@@ -83,13 +89,13 @@ for part in ntlst.parts:
             ttlno = "9334"
         f.write(ttlno)
         f.write("_DIP("+part.ref+")\n")
-    elif part.name == "MB7137":
+    elif partname == "MB7137":
         f.write("   EPROM_2716_DIP("+part.ref+")\n")
         f.write("   PARAM("+part.ref+".ROM, \""+part.value+"\")\n")
-    elif part.name == "NE555P":
+    elif partname == "NE555P":
         f.write("   NE555_DIP("+part.ref+")\n")
     else:
-        print(part.name)
+        print(partname)
 
 for net in ntlst.nets:
     netname = net.name.replace(" ","_").replace("~{","i").replace("}","").replace("(","").replace(")","").replace("&","AND").replace(".","_")
@@ -107,7 +113,11 @@ for net in ntlst.nets:
                 first = False
             else:
                 f.write(", ")
-            f.write(pin.ref+"."+pin.num)
+            f.write(pin.ref+".")
+            if pin.ref.startswith("Q"):
+                f.write(qpins[int(pin.num)-1])
+            else:
+                f.write(pin.num)
         f.write(")\n")
 f.write("}")
 f.close()
