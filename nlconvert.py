@@ -61,7 +61,7 @@ for part in ntlst.parts:
                 first = False
             else:
                 f.write(", ")
-            f.write(part.ref+"_"+str(r)+".1")
+            f.write(part.ref+"_"+str(r+1)+".1")
         f.write(")\n")
     elif partname.startswith("R_Pack"):
         nwtype = int(partname[6:].replace("_Split","").replace("_US",""))
@@ -132,6 +132,8 @@ for net in ntlst.nets:
                     pinno = pinno % dipsize + 1
                     side = 2
                 f.write(str(pinno)+"."+str(side))
+            elif pin.ref.startswith("RN"):
+                f.write(pin.ref+"_"+pin.num+".2")
             else:
                 f.write(pin.ref+".")
                 if pin.ref.startswith("Q"):
